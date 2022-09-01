@@ -41,12 +41,25 @@ class Home extends HookWidget {
       duration: const Duration(milliseconds: animationDuration),
     );
     final cardController = useAnimationController(
-      duration: const Duration(milliseconds: animationDuration * 2),
+      duration: Duration(milliseconds: (animationDuration * 2.5).toInt()),
+    );
+    final secondCardController = useAnimationController(
+      duration: Duration(milliseconds: (animationDuration * 2.5).toInt()),
+    );
+    final secondStartController = useAnimationController(
+      duration: const Duration(milliseconds: animationDuration ~/ 2),
     );
 
     addButtonController.forward();
     myCardsTextController.forward();
-    cardController.forward();
+    cardController.forward().timeout(
+      const Duration(seconds: 1),
+      onTimeout: () {
+        secondStartController.forward();
+        secondCardController.forward();
+        return;
+      },
+    );
 
     return Scaffold(
       body: Padding(
@@ -68,7 +81,22 @@ class Home extends HookWidget {
               ],
             ),
             const SizedBox(height: 20),
-            CC(controller: cardController),
+            CC(
+              cardColor: const Color(0xFFFCF0E2),
+              cardNumber: 3667,
+              value: 5242.13,
+              controller: cardController,
+            ),
+            const Spacer(),
+            FadeTransition(
+              opacity: secondStartController,
+              child: CC(
+                cardColor: const Color(0xFFA95644),
+                cardNumber: 9813,
+                value: 4133.43,
+                controller: secondCardController,
+              ),
+            ),
           ],
         ),
       ),
@@ -133,8 +161,17 @@ class MyCardsText extends HookWidget {
 }
 
 class CC extends HookWidget {
-  const CC({this.controller, super.key});
+  const CC({
+    this.cardNumber,
+    this.value,
+    this.cardColor,
+    this.controller,
+    super.key,
+  });
 
+  final int? cardNumber;
+  final double? value;
+  final Color? cardColor;
   final AnimationController? controller;
 
   @override
@@ -147,6 +184,9 @@ class CC extends HookWidget {
         curve: const Interval(0, .3, curve: Curves.easeIn),
       ),
     );
+    final iconAnimation =
+        Tween<Offset>(begin: const Offset(1, .5), end: Offset.zero)
+            .animate(controller!);
     final transformAnimation = TweenSequence([
       TweenSequenceItem(
         tween: Tween(begin: .0009, end: -.0007),
@@ -161,9 +201,11 @@ class CC extends HookWidget {
     );
 
     final lineAnimation = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(
-            parent: controller!,
-            curve: Interval(.7, 1, curve: Curves.easeInOut)));
+      CurvedAnimation(
+        parent: controller!,
+        curve: const Interval(.7, 1, curve: Curves.easeInOut),
+      ),
+    );
 
     transformAnimation.addListener(() {
       transform.value = transformAnimation.value.toDouble();
@@ -197,73 +239,161 @@ class CC extends HookWidget {
         alignment: FractionalOffset.center,
         child: DecoratedBox(
           decoration: BoxDecoration(
-              color: Color(0xFFFCF0E2),
-              borderRadius: BorderRadius.all(Radius.circular(10))),
+            color: cardColor,
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               FadeTransition(
                 opacity: lineAnimation,
                 child: Transform.translate(
-                  offset: Offset(0, 15),
-                  child: CustomPaint(
+                  offset: const Offset(0, 10),
+                  child: const CustomPaint(
                     painter: Lines(color: scaffoldColor, count: 3),
                   ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40) +
-                    EdgeInsets.only(top: 40, bottom: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 40) +
+                    const EdgeInsets.only(top: 30, bottom: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Container(
-                      height: 15,
-                      width: 15,
-                      decoration: BoxDecoration(
-                        color: scaffoldColor,
-                        shape: BoxShape.circle,
+                    SizedBox(
+                      width: 30,
+                      height: 20,
+                      child: FadeTransition(
+                        opacity: Tween<double>(begin: 0, end: 1).animate(
+                          CurvedAnimation(
+                            parent: controller!,
+                            curve: const Interval(
+                              .2,
+                              1,
+                              curve: Curves.easeInOutCubic,
+                            ),
+                          ),
+                        ),
+                        child: SlideTransition(
+                          position: iconAnimation,
+                          child: const CustomPaint(
+                            painter: Circles(
+                              firstCircleColor: Color(0xFFFFFFFF),
+                              secondCircleColor: Color(0xFF000000),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(
-                          '\$5421.50',
-                          style: TextStyle(
-                              fontSize: 25,
-                              color: scaffoldColor,
-                              fontWeight: FontWeight.w600),
+                        AnimatedCounter(
+                          value: value,
+                          controller: controller,
                         ),
-                        Text(
-                          '•••',
-                          style: TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 2,
-                            color: scaffoldColor,
+                        FadeTransition(
+                          opacity: lineAnimation
+                            ..drive(
+                              Tween<double>(begin: 0, end: 1)
+                                ..animate(
+                                  CurvedAnimation(
+                                    parent: controller!,
+                                    curve: const Interval(
+                                      .6,
+                                      1,
+                                      curve: Curves.easeInOutCubic,
+                                    ),
+                                  ),
+                                ),
+                            ),
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(-3, 0),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: controller!,
+                                curve: const Interval(
+                                  .6,
+                                  1,
+                                  curve: Curves.easeInOutCubic,
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              '•••',
+                              style: TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 2,
+                                color: scaffoldColor,
+                              ),
+                            ),
                           ),
                         )
                       ],
                     ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Balance',
-                      style: TextStyle(
-                          fontSize: 15,
-                          color: scaffoldColor,
-                          fontWeight: FontWeight.w400),
+                    const SizedBox(height: 10),
+                    FadeTransition(
+                      opacity: lineAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: controller!,
+                            curve: const Interval(
+                              .5,
+                              1,
+                              curve: Curves.easeInOutCubic,
+                            ),
+                          ),
+                        ),
+                        child: const Text(
+                          'Balance',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: scaffoldColor,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 10),
-                    NumberLine(),
+                    const SizedBox(height: 10),
+                    FadeTransition(
+                      opacity: lineAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: controller!,
+                            curve: const Interval(
+                              .7,
+                              1,
+                              curve: Curves.easeInOutCubic,
+                            ),
+                          ),
+                        ),
+                        child: NumberLine(cardNumber),
+                      ),
+                    ),
                   ],
                 ),
               ),
               Align(
                 alignment: Alignment.centerRight,
-                child: const ZigZagLine(
-                    angle: 90, color: scaffoldColor, depth: 20),
+                child: ZigZagLine(
+                  zigs: 3,
+                  width: 5,
+                  count: 2,
+                  color: scaffoldColor,
+                  controller: controller,
+                ),
               ),
             ],
           ),
@@ -307,13 +437,14 @@ class Lines extends CustomPainter {
 }
 
 class NumberLine extends StatelessWidget {
-  const NumberLine({super.key});
+  const NumberLine(this.cardNumber, {super.key});
+  final int? cardNumber;
 
   @override
   Widget build(BuildContext context) {
     Size getSize() {
-      final textSpan = TextSpan(
-        text: '5',
+      const textSpan = TextSpan(
+        text: '8',
         style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
       );
       final painter = TextPainter(text: textSpan);
@@ -333,39 +464,62 @@ class NumberLine extends StatelessWidget {
         for (int i = 0; i < 3; i++)
           SizedBox(
             height: numberSize.height,
-            child: Text(
+            child: const Text(
               '****',
               style: TextStyle(
-                  color: scaffoldColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500),
+                color: scaffoldColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
-        Text('3233',
-            style: TextStyle(
-                color: scaffoldColor,
-                fontWeight: FontWeight.w700,
-                fontSize: 20)),
+        Text(
+          cardNumber.toString(),
+          style: const TextStyle(
+            color: scaffoldColor,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
       ],
     );
   }
 }
 
-class ZigZagLine extends StatelessWidget {
-  const ZigZagLine({this.depth, this.angle, this.color});
+class ZigZagLine extends HookWidget {
+  const ZigZagLine({
+    this.count,
+    this.zigs,
+    this.width,
+    this.color,
+    this.controller,
+  });
 
-  final double? depth;
-  final double? angle;
+  final int? zigs;
+  final int? count;
+  final double? width;
   final Color? color;
+  final AnimationController? controller;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      width: 80,
-      child: CustomPaint(
-        painter: LinePainter(this),
+    final animation =
+        Tween<Offset>(begin: const Offset(2, 0), end: Offset.zero).animate(
+      CurvedAnimation(
+        parent: controller!,
+        curve: const Interval(.5, 1, curve: Curves.easeInOutCubic),
+      ),
+    );
+
+    return SlideTransition(
+      position: animation,
+      child: SizedBox(
+        height: 30,
+        width: 50,
+        child: CustomPaint(
+          painter: LinePainter(this),
+        ),
       ),
     );
   }
@@ -383,32 +537,303 @@ class LinePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
-    final width = line!.angle == 90
-        ? line!.depth
-        : (line!.depth! * tan(line!.angle! / 360 * pi));
-    final zigZagAperture = width! * 2;
-    final zigZagCount = (size.width / zigZagAperture).floor();
+    canvas.save();
+    canvas.translate(0, 0);
 
-    final zigZagPath = Path()..moveTo(size.width, 0);
-    final points = <Offset>[];
+    for (int i = 0; i < line!.count!; i++) {
+      final end = Offset(size.width + 2, i * 7);
+      final length = end.distance;
+      final spacing = length / (line!.zigs! * 2);
+      final path = Path()..moveTo(0, end.dy);
 
-    double position = 0;
+      // canvas.rotate(atan(end.dy / end.dx));
 
-    points.add(Offset(position, line!.depth! / 2));
-    points.add(Offset(position += width / 2, 0));
-    points.add(Offset(position += width, line!.depth!));
+      for (int index = 0; index < line!.zigs!; index++) {
+        final x = (index * 2 + 1) * spacing;
+        final y = line!.width! * ((index % 2) * 2 - 1) + 7 * i;
+        path.lineTo(x, y);
+      }
 
-    for (int i = 2; i <= zigZagCount; i++) {
-      points.add(Offset(position, line!.depth!));
-      points.add(Offset(position += width, 0));
-      points.add(Offset(position += width, line!.depth!));
+      path.lineTo(length, i * 7);
+      canvas.drawPath(path, paint);
+    }
+    canvas.restore();
+
+    // final width = line!.angle == 90
+    //     ? line!.depth
+    //     : (line!.depth! * tan(line!.angle! / 360 * pi));
+    // final zigZagAperture = width! * 2;
+    // final zigZagCount = (size.width / zigZagAperture).floor();
+
+    // final zigZagPath = Path()..moveTo(size.width, 0);
+    // final points = <Offset>[];
+
+    // double position = 0;
+
+    // points.add(Offset(position, line!.depth! / 2));
+    // points.add(Offset(position += width / 2, 0));
+    // points.add(Offset(position += width, line!.depth!));
+
+    // for (int i = 2; i <= zigZagCount; i++) {
+    //   points.add(Offset(position, line!.depth!));
+    //   points.add(Offset(position += width, 0));
+    //   points.add(Offset(position += width, line!.depth!));
+    // }
+
+    // points.add(Offset(position, line!.depth!));
+    // points.add(Offset(position += width / 2, line!.depth! / 2));
+
+    // zigZagPath.addPolygon(points, false);
+    // canvas.drawPath(zigZagPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class AnimatedCounter extends HookWidget {
+  const AnimatedCounter({
+    this.value,
+    this.controller,
+  });
+
+  final num? value;
+  final AnimationController? controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final counterValue = useAnimation(
+      Tween<double>(begin: 0, end: value!.toDouble()).animate(
+        CurvedAnimation(parent: controller!, curve: Curves.easeInOutCubic),
+      ),
+    );
+
+    return AnimatedCounterWidget(
+      value: counterValue,
+      color: scaffoldColor,
+      curve: Curves.easeInOutCubic,
+      controller: controller,
+      fractionDigits: 2,
+      padding: const EdgeInsets.all(2),
+      style: const TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: 25,
+      ),
+      wholeDigits: 0,
+    );
+  }
+}
+
+class AnimatedCounterWidget extends HookWidget {
+  const AnimatedCounterWidget({
+    this.value,
+    this.color,
+    this.curve,
+    this.padding,
+    this.fractionDigits,
+    this.wholeDigits,
+    this.controller,
+    this.style,
+    super.key,
+  });
+
+  final num? value;
+  final int? fractionDigits;
+  final int? wholeDigits;
+  final Curve? curve;
+  final Color? color;
+  final TextStyle? style;
+  final AnimationController? controller;
+  final EdgeInsets? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final digitProp = TextPainter(
+      text: TextSpan(
+        text: '8',
+        style:
+            TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaleFactor: MediaQuery.of(context).textScaleFactor,
+    )..layout();
+
+    final value = (this.value! * pow(10, fractionDigits!)).round();
+
+    List<int> digits = value == 0 ? [0] : [];
+    int v = value.abs();
+
+    while (v > 0) {
+      digits.add(v);
+      v = v ~/ 10;
+    }
+    while (digits.length < wholeDigits! + fractionDigits!) {
+      digits.add(0);
+    }
+    digits = digits.reversed.toList(growable: false);
+
+    final integerWidgets = <Widget>[];
+    for (int i = 0; i < digits.length - fractionDigits!; i++) {
+      final digit = SingleDigit(
+        key: ValueKey(digits.length - i),
+        value: digits[i].toDouble(),
+        duration: controller!.duration! * 1.5,
+        curve: curve!,
+        size: digitProp.size,
+        color: color!,
+        padding: padding!,
+      );
+      integerWidgets.add(digit);
     }
 
-    points.add(Offset(position, line!.depth!));
-    points.add(Offset(position += width / 2, line!.depth! / 2));
+    final textStyle = style!.merge(TextStyle(color: color));
 
-    zigZagPath.addPolygon(points, false);
-    canvas.drawPath(zigZagPath, paint);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          child: TweenAnimationBuilder(
+            duration: controller!.duration! * 1.5,
+            tween: Tween(end: value < 0 ? 1 : 0),
+            builder: (_, int v, __) => Center(
+              widthFactor: v.toDouble(),
+              child: const Text('-'),
+            ),
+          ),
+        ),
+        ...integerWidgets,
+        if (fractionDigits != 0)
+          Padding(
+            padding: EdgeInsets.only(bottom: padding!.bottom),
+            child: Text('.', style: textStyle),
+          ),
+        for (int i = digits.length - fractionDigits!; i < digits.length; i++)
+          SingleDigit(
+            key: ValueKey("decimal$i"),
+            value: digits[i].toDouble(),
+            duration: controller!.duration!,
+            curve: curve!,
+            size: digitProp.size,
+            color: color!,
+            padding: padding!,
+          ),
+      ],
+    );
+  }
+}
+
+class SingleDigit extends StatelessWidget {
+  final double value;
+  final Duration duration;
+  final Curve curve;
+  final Size size;
+  final Color color;
+  final EdgeInsets padding;
+
+  const SingleDigit({
+    required this.value,
+    required this.duration,
+    required this.curve,
+    required this.size,
+    required this.color,
+    required this.padding,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget buildSingleDigit({
+      required int digit,
+      required double offset,
+      required double opacity,
+    }) {
+      final Widget? child;
+      if (color.opacity == 1) {
+        child = Text(
+          '$digit',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: color.withOpacity(opacity.clamp(0, 1)),
+            fontWeight: FontWeight.w700,
+            fontSize: 25,
+          ),
+        );
+      } else {
+        child = Opacity(
+          opacity: opacity.clamp(0, 1),
+          child: Text('$digit', textAlign: TextAlign.center),
+        );
+      }
+
+      return Positioned(
+        left: 0,
+        right: 0,
+        bottom: offset + padding.bottom,
+        child: child,
+      );
+    }
+
+    return TweenAnimationBuilder(
+      tween: Tween(end: value),
+      duration: duration,
+      curve: curve,
+      builder: (_, double value, __) {
+        final whole = value ~/ 1;
+        final decimal = value - whole;
+        final w = size.width + padding.horizontal;
+        final h = size.height + padding.vertical;
+
+        return SizedBox(
+          width: w,
+          height: h,
+          child: Stack(
+            children: <Widget>[
+              buildSingleDigit(
+                digit: whole % 10,
+                offset: h * decimal,
+                opacity: 1 - decimal,
+              ),
+              buildSingleDigit(
+                digit: (whole + 1) % 10,
+                offset: h * decimal - h,
+                opacity: decimal,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class Circles extends CustomPainter {
+  const Circles({this.firstCircleColor, this.secondCircleColor});
+
+  final Color? firstCircleColor;
+  final Color? secondCircleColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final center = size.width / 2;
+
+    canvas.save();
+
+    final radius = center / 1.5;
+
+    canvas
+      ..drawCircle(
+        Offset(radius * 2.5, radius),
+        radius,
+        paint..color = secondCircleColor!,
+      )
+      ..drawCircle(
+        Offset(radius, radius),
+        center / 1.5,
+        paint..color = firstCircleColor!,
+      );
+
+    canvas.restore();
   }
 
   @override
