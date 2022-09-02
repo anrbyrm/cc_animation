@@ -4,6 +4,7 @@ import 'package:cc_animation/constants.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
   runApp(const App());
@@ -14,17 +15,24 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'CC animation',
-      theme: ThemeData(
-        scaffoldBackgroundColor: scaffoldColor,
-        textTheme: Theme.of(context).textTheme.apply(
-              displayColor: const Color(0xFFFFFFFF),
-              bodyColor: const Color(0xFFFFFFFF),
-            ),
+    return ScreenUtilInit(
+      designSize: const Size(360, 640),
+      splitScreenMode: true,
+      minTextAdapt: true,
+      builder: (context, child) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'CC animation',
+        theme: ThemeData(
+          scaffoldBackgroundColor: scaffoldColor,
+          textTheme: Theme.of(context).textTheme.apply(
+                fontFamily: 'poppins',
+                displayColor: const Color(0xFFFFFFFF),
+                bodyColor: const Color(0xFFFFFFFF),
+              ),
+        ),
+        home: child,
       ),
-      home: const Home(),
+      child: const Home(),
     );
   }
 }
@@ -63,7 +71,7 @@ class Home extends HookWidget {
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: horizontalPadding,
           vertical: verticalPadding,
         ),
@@ -75,25 +83,54 @@ class Home extends HookWidget {
                   children: [
                     MyCardsText(controller: myCardsTextController),
                     const Spacer(),
-                    AddButton(controller: addButtonController),
+                    GestureDetector(
+                      onTap: () {
+                        addButtonController
+                          ..reset()
+                          ..forward();
+                        myCardsTextController
+                          ..reset()
+                          ..forward();
+                        cardController
+                          ..reset()
+                          ..forward().timeout(
+                            const Duration(seconds: 1),
+                            onTimeout: () {
+                              secondStartController.forward();
+                              secondCardController.forward();
+                              return;
+                            },
+                          );
+                      },
+                      child: AddButton(controller: addButtonController),
+                    ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            CC(
-              cardColor: const Color(0xFFFCF0E2),
-              cardNumber: 3667,
-              value: 5242.13,
-              controller: cardController,
+            SizedBox(height: 10.h),
+            Wrap(
+              verticalDirection: VerticalDirection.up,
+              children: <Widget>[
+                Calendar(cardController),
+                Column(
+                  children: <Widget>[
+                    CC(
+                      cardColor: const Color(0xFFFCF0E2),
+                      cardNumber: 3667,
+                      value: 5242.13,
+                      controller: cardController,
+                    ),
+                    SizedBox(height: 5.h),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            Calendar(cardController),
             const Spacer(),
             FadeTransition(
               opacity: secondStartController,
               child: CC(
-                cardColor: const Color(0xFFA95644),
+                cardColor: const Color(0xFFF18966),
                 cardNumber: 9813,
                 value: 4133.43,
                 controller: secondCardController,
@@ -123,8 +160,8 @@ class AddButton extends HookWidget {
           borderRadius: BorderRadius.all(Radius.circular(10)),
           color: Color(0xFFFFFFFF),
         ),
-        height: 40,
-        width: 40,
+        height: 25.h,
+        width: 25.h,
         child: const Icon(Icons.add),
       ),
     );
@@ -150,10 +187,10 @@ class MyCardsText extends HookWidget {
       position: slideAnimation,
       child: FadeTransition(
         opacity: opacityAnimation,
-        child: const Text(
+        child: Text(
           'My Cards',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 18.sp,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -242,7 +279,7 @@ class CC extends HookWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            borderRadius: BorderRadius.all(Radius.circular(cardBorderRadius)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,21 +287,21 @@ class CC extends HookWidget {
               FadeTransition(
                 opacity: lineAnimation,
                 child: Transform.translate(
-                  offset: const Offset(0, 10),
+                  offset: Offset(0, 7.h),
                   child: const CustomPaint(
                     painter: Lines(color: scaffoldColor, count: 3),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40) +
-                    const EdgeInsets.only(top: 30, bottom: 20),
+                padding: EdgeInsets.symmetric(horizontal: 35.w) +
+                    EdgeInsets.only(top: 25.h, bottom: 15.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     SizedBox(
-                      width: 30,
-                      height: 20,
+                      width: 30.w,
+                      height: 15.h,
                       child: FadeTransition(
                         opacity: Tween<double>(begin: 0, end: 1).animate(
                           CurvedAnimation(
@@ -287,7 +324,7 @@ class CC extends HookWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 10.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
@@ -324,10 +361,10 @@ class CC extends HookWidget {
                                 ),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               '•••',
                               style: TextStyle(
-                                fontSize: 25,
+                                fontSize: 20.sp,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 2,
                                 color: scaffoldColor,
@@ -337,7 +374,7 @@ class CC extends HookWidget {
                         )
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     FadeTransition(
                       opacity: lineAnimation,
                       child: SlideTransition(
@@ -354,17 +391,17 @@ class CC extends HookWidget {
                             ),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Balance',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 15.sp,
                             color: scaffoldColor,
-                            fontWeight: FontWeight.w400,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     FadeTransition(
                       opacity: lineAnimation,
                       child: SlideTransition(
@@ -391,7 +428,7 @@ class CC extends HookWidget {
                 alignment: Alignment.centerRight,
                 child: ZigZagLine(
                   zigs: 3,
-                  width: 5,
+                  width: 5.w,
                   count: 2,
                   color: scaffoldColor,
                   controller: controller,
@@ -425,8 +462,8 @@ class Lines extends CustomPainter {
       canvas
         ..drawPath(path, paint)
         ..drawLine(
-          Offset(0, 10 + i * 6),
-          Offset(15, 20 + i * 6),
+          Offset(0, 10.w + i * 6),
+          Offset(10.h, 20.w + i * 6),
           paint,
         );
     }
@@ -445,9 +482,9 @@ class NumberLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Size getSize() {
-      const textSpan = TextSpan(
+      final textSpan = TextSpan(
         text: '8',
-        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18.sp),
       );
       final painter = TextPainter(text: textSpan);
       painter.textDirection = TextDirection.ltr;
@@ -478,10 +515,10 @@ class NumberLine extends StatelessWidget {
           ),
         Text(
           cardNumber.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             color: scaffoldColor,
             fontWeight: FontWeight.w700,
-            fontSize: 20,
+            fontSize: 18.sp,
           ),
         ),
       ],
@@ -616,10 +653,10 @@ class AnimatedCounter extends HookWidget {
       curve: Curves.easeInOutCubic,
       controller: controller,
       fractionDigits: 2,
-      padding: const EdgeInsets.all(1),
-      style: const TextStyle(
+      padding: const EdgeInsets.all(1.5),
+      style: TextStyle(
         fontWeight: FontWeight.w700,
-        fontSize: 23,
+        fontSize: 23.sp,
       ),
       wholeDigits: 0,
     );
@@ -652,9 +689,12 @@ class AnimatedCounterWidget extends HookWidget {
   Widget build(BuildContext context) {
     final digitProp = TextPainter(
       text: TextSpan(
-        text: '8',
-        style:
-            TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: color),
+        text: '5',
+        style: TextStyle(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
       ),
       textDirection: TextDirection.ltr,
       textScaleFactor: MediaQuery.of(context).textScaleFactor,
@@ -772,7 +812,7 @@ class SingleDigit extends StatelessWidget {
       return Positioned(
         left: 0,
         right: 0,
-        bottom: offset - 2,
+        bottom: offset - 5.h,
         child: child,
       );
     }
@@ -851,16 +891,111 @@ class Calendar extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position:
-          Tween<Offset>(begin: const Offset(0, -.5), end: Offset.zero).animate(
-        CurvedAnimation(parent: controller!, curve: Curves.easeOutBack),
+    Widget slide(Axis? direction, Widget? child) => SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(
+              direction == Axis.horizontal ? 1.5 : 0,
+              direction == Axis.vertical ? 0 : -1.5,
+            ),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(
+              parent: controller!,
+              curve: const Interval(.6, 1, curve: calendarCurve),
+            ),
+          ),
+          child: FadeTransition(
+            opacity: Tween<double>(begin: 0, end: 1).animate(
+              CurvedAnimation(
+                parent: controller!,
+                curve: const Interval(.6, 1, curve: calendarCurve),
+              ),
+            ),
+            child: child,
+          ),
+        );
+
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(
+          parent: controller!,
+          curve: const Interval(.5, 1, curve: calendarCurve),
+        ),
       ),
-      child: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          color: Color(0xFF191819),
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+      child: SlideTransition(
+        position:
+            Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: controller!,
+            curve: const Interval(.5, 1, curve: calendarCurve),
+          ),
+        ),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Color(0xFF191819),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(15.h),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    slide(
+                      Axis.vertical,
+                      Text(
+                        'Friday, 25 Dec 2022',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: const Color(0xFF515148),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                    slide(
+                      Axis.horizontal,
+                      Text(
+                        '\$695.50',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+                const Spacer(),
+                SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(-1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: controller!,
+                      curve: const Interval(.7, 1, curve: calendarCurve),
+                    ),
+                  ),
+                  child: FadeTransition(
+                    opacity: Tween<double>(begin: 0, end: 1).animate(
+                      CurvedAnimation(
+                        parent: controller!,
+                        curve: const Interval(.7, 1, curve: calendarCurve),
+                      ),
+                    ),
+                    child: const Text(
+                      'Due',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFF18966),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
         ),
       ),
     );
