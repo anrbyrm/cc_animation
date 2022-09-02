@@ -87,6 +87,8 @@ class Home extends HookWidget {
               value: 5242.13,
               controller: cardController,
             ),
+            const SizedBox(height: 10),
+            Calendar(cardController),
             const Spacer(),
             FadeTransition(
               opacity: secondStartController,
@@ -614,10 +616,10 @@ class AnimatedCounter extends HookWidget {
       curve: Curves.easeInOutCubic,
       controller: controller,
       fractionDigits: 2,
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(1),
       style: const TextStyle(
         fontWeight: FontWeight.w700,
-        fontSize: 25,
+        fontSize: 23,
       ),
       wholeDigits: 0,
     );
@@ -691,6 +693,8 @@ class AnimatedCounterWidget extends HookWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        Text('\$', style: textStyle),
+        const SizedBox(width: 2),
         ClipRRect(
           child: TweenAnimationBuilder(
             duration: controller!.duration! * 1.5,
@@ -704,7 +708,7 @@ class AnimatedCounterWidget extends HookWidget {
         ...integerWidgets,
         if (fractionDigits != 0)
           Padding(
-            padding: EdgeInsets.only(bottom: padding!.bottom),
+            padding: const EdgeInsets.only(top: 2),
             child: Text('.', style: textStyle),
           ),
         for (int i = digits.length - fractionDigits!; i < digits.length; i++)
@@ -768,7 +772,7 @@ class SingleDigit extends StatelessWidget {
       return Positioned(
         left: 0,
         right: 0,
-        bottom: offset + padding.bottom,
+        bottom: offset - 2,
         child: child,
       );
     }
@@ -838,4 +842,27 @@ class Circles extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class Calendar extends HookWidget {
+  const Calendar(this.controller, {super.key});
+
+  final AnimationController? controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position:
+          Tween<Offset>(begin: const Offset(0, -.5), end: Offset.zero).animate(
+        CurvedAnimation(parent: controller!, curve: Curves.easeOutBack),
+      ),
+      child: Container(
+        height: 100,
+        decoration: BoxDecoration(
+          color: Color(0xFF191819),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+        ),
+      ),
+    );
+  }
 }
